@@ -5,13 +5,23 @@ import okex.lever_api as lever
 import okex.spot_api as spot
 import json
 
+api_key = '1dadd0fb-0f7b-4649-b5c0-9ebe72f5a94b'
+secret_key = 'BBD0B6C295D9701BA29F88A2B10FA620'
+passphrase = ''
+
+futureAPI = future.FutureAPI(api_key, secret_key, passphrase, True)
+
+# symbol is like BTC-USD, contract is like quarter/this_week/next_week
+def query_instrument_id(symbol, contract):
+    result = json.dump(futureAPI.get_products())
+    return list(filter(lambda i: i['alias'] == contract.upper() and i['underlying'] == symbol.upper(), result))[0]['instrument_id']
+
+def query_orderinfo(symbol, contract, order_id):
+    return futureAPI.get_order_info(order_id, query_instrument_id(symbol, contract))
+#    return futureAPI.future_orderinfo(symbol,contract, order_id,'0','1','2')
+
 
 if __name__ == '__main__':
-
-    api_key = ''
-    seceret_key = ''
-    passphrase = ''
-    
 
     # account api test
     # param use_server_time's value is False if is True will use server timestamp
@@ -44,20 +54,20 @@ if __name__ == '__main__':
     #result = spotAPI.get_kline('LTC-USDT', '2018-09-12T07:59:45.977Z', '2018-09-13T07:59:45.977Z', 60)
 
     # future api test
-    futureAPI = future.FutureAPI(api_key, seceret_key, passphrase, True)
+    futureAPI = future.FutureAPI(api_key, secret_key, passphrase, True)
     #result = futureAPI.get_position()
     #result = futureAPI.get_coin_account('btc')
     #result = futureAPI.get_leverage('btc')
     #result = futureAPI.set_leverage(symbol='BTC', instrument_id='BCH-USD-181026', direction=1, leverage=10)
 
-    orders = []
-    order1 = {"client_oid": "f379a96206fa4b778e1554c6dc969687", "type": "2", "price": "1800.0", "size": "1", "match_price": "0"}
-    order2 = {"client_oid": "f379a96206fa4b778e1554c6dc969687", "type": "2", "price": "1800.0", "size": "1", "match_price": "0"}
-    orders.append(order1)
-    orders.append(order2)
-    orders_data = json.dumps(orders)
-    print(orders_data)
-    result = futureAPI.take_orders('BCH-USD-181019', orders_data=orders_data, leverage=10)
+    # orders = []
+    # order1 = {"client_oid": "f379a96206fa4b778e1554c6dc969687", "type": "2", "price": "1800.0", "size": "1", "match_price": "0"}
+    # order2 = {"client_oid": "f379a96206fa4b778e1554c6dc969687", "type": "2", "price": "1800.0", "size": "1", "match_price": "0"}
+    # orders.append(order1)
+    # orders.append(order2)
+    # orders_data = json.dumps(orders)
+    # print(orders_data)
+    # result = futureAPI.take_orders('BCH-USD-181019', orders_data=orders_data, leverage=10)
 
     #result = futureAPI.get_ledger('btc')
     #result = futureAPI.get_products()
@@ -68,7 +78,6 @@ if __name__ == '__main__':
     #result = futureAPI.get_trades('ETC-USD-181026', 1, 3, 10)
     #result = futureAPI.get_kline('ETC-USD-181026','2018-10-14T03:48:04.081Z', '2018-10-15T03:48:04.081Z')
     #result = futureAPI.get_index('EOS-USD-181019')
-    #result = futureAPI.get_products()
     #result = futureAPI.take_order("ccbce5bb7f7344288f32585cd3adf357", 'BCH-USD-181019','2','10000.1','1','0','10')
     #result = futureAPI.take_order("ccbce5bb7f7344288f32585cd3adf351",'BCH-USD-181019',2,10000.1,1,0,10)
     #result = futureAPI.get_trades('BCH-USD-181019')
@@ -79,6 +88,7 @@ if __name__ == '__main__':
     #result = futureAPI.get_liquidation('BTC-USD-181019', 0)
     #result = futureAPI.get_holds_amount('BCH-USD-181019')
     #result = futureAPI.get_currencies()
+    #result = futureAPI.get_order_info(order-id, instrument_id)
 
     # level api test
     #levelAPI = lever.LeverAPI(api_key, seceret_key, passphrase, True)
