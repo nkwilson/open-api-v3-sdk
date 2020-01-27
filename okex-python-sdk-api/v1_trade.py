@@ -62,83 +62,6 @@ okcoinSpot = OKCoinSpot(okcoinRESTURL,apikey,secretkey)
 #期货API
 okcoinFuture = OKCoinFuture(okcoinRESTURL,apikey,secretkey)
 
-#print (u'K线信息')
-# print (okcoinSpot.kline('btc_cny'))
-
-#print (u' 现货行情 ')
-#print (okcoinSpot.ticker('btc_usd'))
-
-#print (u' 现货深度 ')
-#print (okcoinSpot.depth('btc_usd'))
-
-#print (u' 现货历史交易信息 ')
-#print (okcoinSpot.trades())
-
-#print (u' 用户现货账户信息 ')
-#print (okcoinSpot.userinfo())
-
-#print (u' 现货下单 ')
-#print (okcoinSpot.trade('ltc_usd','buy','0.1','0.2'))
-
-#print (u' 现货批量下单 ')
-#print (okcoinSpot.batchTrade('ltc_usd','buy','[{price:0.1,amount:0.2},{price:0.1,amount:0.2}]'))
-
-#print (u' 现货取消订单 ')
-#print (okcoinSpot.cancelOrder('ltc_usd','18243073'))
-
-#print (u' 现货订单信息查询 ')
-#print (okcoinSpot.orderinfo('ltc_usd','18243644'))
-
-#print (u' 现货批量订单信息查询 ')
-#print (okcoinSpot.ordersinfo('ltc_usd','18243800,18243801,18243644','0'))
-
-#print (u' 现货历史订单信息查询 ')
-#print (okcoinSpot.orderHistory('ltc_usd','0','1','2'))
-
-#print (u' 期货行情信息')
-#print (okcoinFuture.future_ticker('btc_usd','quarter'))
-
-#print (u' 期货k线信息')
-#print (okcoinFuture.future_kline('btc_usd','4hour', 'quarter', '1'))
-#[[1560038400000, 7904.03, 7941.03, 7828, 7852.97, 694211, 8821.79293212]]
-
-#print (u' 期货市场深度信息')
-#print (okcoinFuture.future_depth('btc_usd','this_week','6'))
-
-#print (u'期货交易记录信息') 
-#print (okcoinFuture.future_trades('ltc_usd','this_week'))
-
-#print (u'期货指数信息')
-#print (okcoinFuture.future_index('ltc_usd'))
-
-#print (u'美元人民币汇率')
-#print (okcoinFuture.exchange_rate())
-
-#print (u'获取预估交割价') 
-#print (okcoinFuture.future_estimated_price('ltc_usd'))
-
-#print (u'获取全仓账户信息')
-#print (okcoinFuture.future_userinfo())
-
-#print (u'获取全仓持仓信息')
-#print (okcoinFuture.future_position('btc_usd','quarter'))  # works
-
-
-# |参数名|	参数类型|	必填|	描述|
-# | :-----    | :-----   | :-----    | :-----   |
-# |symbol|String|是|btc\_usd   ltc\_usd    eth\_usd    etc\_usd    bch\_usd|
-# |contract\_type|String|是|合约类型: this\_week:当周   next\_week:下周   quarter:季度|
-# |api_key|String|是|用户申请的apiKey|
-# |sign|String|是|请求参数的签名|
-# |price|String|是|价格|
-# |amount|String|是|委托数量|
-# |type|String|是|1:开多 2:开空 3:平多 4:平空|
-# |match_price|String|否|是否为对手价 0:不是    1:是   ,当取值为1时,price无效|
-# |lever_rate|String|否|杠杆倍数，下单时无需传送，系统取用户在页面上设置的杠杆倍数。且“开仓”若有10倍多单，就不能再下20倍多单|
-#future_trade(self,symbol,contractType,price='',amount='',tradeType='',matchPrice='',leverRate='') tradeType=2 best match price
-#print (u'期货下单')
-#print (okcoinFuture.future_trade('btc_usd','quarter','','1','1','1','10')) # works
-
 def open_order_sell_rate(symbol, contract, amount, price='', lever_rate='10'):
     return okcoinFuture.future_trade(symbol, contract, '', amount, '2',
                                      '1', '10')
@@ -154,59 +77,13 @@ def open_order_buy_rate(symbol, contract, amount, price='', lever_rate='10'):
 def close_order_buy_rate(symbol, contract, amount, price='', lever_rate='10'):
     return okcoinFuture.future_trade(symbol, contract, '', amount, '3',
                                      '1', '10')
+
 def cancel_order(symbol, contract, order_id):
     return okcoinFuture.future_cancel(symbol, contract, order_id)
-
-#print (u'期货批量下单')
-#print (okcoinFuture.future_batchTrade('ltc_usd','this_week','[{price:0.1,amount:1,type:1,match_price:0},{price:0.1,amount:3,type:1,match_price:0}]','20'))
-
-#print (u'期货取消订单')
-#print (okcoinFuture.future_cancel('ltc_usd','this_week','47231499'))
-
-#print (u'期货获取订单信息')
-#print (okcoinFuture.future_orderinfo('ltc_usd','this_week','47231812','0','1','2'))
 
 def query_orderinfo(symbol, contract, order_id):
     return okcoinFuture.future_orderinfo(symbol,contract, order_id,'0','1','2')
 
-#print (u'期货逐仓账户信息')
-#print (json.loads(okcoinFuture.future_userinfo_4fix())) # not work for 全仓模式
-
-#print (u'期货逐仓持仓信息')
-#print (json.loads(okcoinFuture.future_position_4fix('ltc_usd','quarter', '1')))
-
-#print (quarter_auto_bond('ltc_usd'), quarter_auto_balance('ltc_usd'))
-#os.sys.exit(0)
-
-# demo: ok_sub_futureusd_btc_kline_quarter_4hou
-def figure_out_symbol_info(path):
-    path = os.path.splitext(path)[0]
-    start_pattern = 'ok_sub_future'
-    end_pattern = '_kline_'
-    start = path.index(start_pattern) + len(start_pattern)
-    end = path.index(end_pattern)
-    # print ('symbol is %s' % (path[start:end]))
-    return path[start:end]
-
-def figure_out_contract_info(path):
-    path = os.path.splitext(path)[0]
-    start_pattern = 'kline_'
-    end_pattern = '_'
-    start = path.index(start_pattern) + len(start_pattern)
-    end = path.rindex(end_pattern)
-    # print ('contract is %s' % (path[start:end]))
-    return path[start:end]
-
-def figure_out_period_info(path):
-    path = os.path.splitext(path)[0]
-    start_pattern = '_'
-    start = path.rindex(start_pattern) + len(start_pattern)
-    # print ('period is %s' % (path[start:]))
-    return path[start:]
-
-
-# {'result': True, 'holding': [{'buy_price_avg': 176.08158274, 'symbol': 'eth_usd', 'lever_rate': 10, 'buy_available': 0, 'contract_id': 201906280020041, 'sell_risk_rate': '99.36', 'buy_amount': 0, 'buy_risk_rate': '1,000,000.00', 'profit_real': -1.847e-05, 'contract_type': 'quarter', 'sell_flatprice': '178.453', 'buy_bond': 0, 'sell_profit_lossratio': '-0.66', 'buy_flatprice': '0.000', 'buy_profit_lossratio': '0.00', 'sell_amount': 1, 'sell_bond': 0.00615942, 'sell_price_cost': 162.388, 'buy_price_cost': 176.08158274, 'create_date': 1552656509000, 'sell_price_avg': 162.388, 'sell_available': 1}]}
-# if current order is permit to issue
 def check_holdings_profit(symbol, contract, direction):
     nn = (0,0)
     loops = 5
@@ -236,11 +113,55 @@ def check_holdings_profit(symbol, contract, direction):
                 return (loss, amount)
     return nn
 
-#print (okcoinFuture.future_position('ltc_usd','quarter'))  # works
-#print (okcoinFuture.future_position('ltc_usd','this_week'))  # works
-#print (check_holdings_profit('ltc_usd', 'this_week', 'buy'))
-#print (check_holdings_profit('ltc_usd', 'this_week', 'sell'))
-#sys.exit(1)
+def query_bond(symbol, contract, direction):
+    if options.emulate:
+        return 0.0
+    holding=json.loads(okcoinFuture.future_position_4fix(symbol, contract, '1'))
+    if holding['result'] != True:
+        return 0.0 # 0 means failed
+    if len(holding['holding']) == 0:
+        return 0.0
+    for data in holding['holding']:
+        if data['symbol'] == symbol:
+            if data['%s_amount' % direction] > 0:
+                return data['%s_bond' % direction]/data['%s_amount' % direction]
+    return 0.0
+
+def query_balance(symbol):
+    if options.emulate:
+        return 0.0
+    coin = symbol[0:symbol.index('_')]
+    result=json.loads(okcoinFuture.future_userinfo_4fix())
+    if result['result'] != True:
+        return 0.0
+    return float(result['info'][coin]['rights'])
+
+
+# demo: ok_sub_futureusd_btc_kline_quarter_4hou
+def figure_out_symbol_info(path):
+    path = os.path.splitext(path)[0]
+    start_pattern = 'ok_sub_future'
+    end_pattern = '_kline_'
+    start = path.index(start_pattern) + len(start_pattern)
+    end = path.index(end_pattern)
+    # print ('symbol is %s' % (path[start:end]))
+    return path[start:end]
+
+def figure_out_contract_info(path):
+    path = os.path.splitext(path)[0]
+    start_pattern = 'kline_'
+    end_pattern = '_'
+    start = path.index(start_pattern) + len(start_pattern)
+    end = path.rindex(end_pattern)
+    # print ('contract is %s' % (path[start:end]))
+    return path[start:end]
+
+def figure_out_period_info(path):
+    path = os.path.splitext(path)[0]
+    start_pattern = '_'
+    start = path.rindex(start_pattern) + len(start_pattern)
+    # print ('period is %s' % (path[start:]))
+    return path[start:]
 
 order_infos = {'usd_btc':'btc_usd',
                'usd_ltc':'ltc_usd',
@@ -253,7 +174,6 @@ order_infos = {'usd_btc':'btc_usd',
                'buy':{'open':open_order_buy_rate,
                       'close':close_order_buy_rate}}
 
-# {'result': True, 'orders': [{'symbol': 'eth_usd', 'lever_rate': 10, 'amount': 1, 'fee': -1.131e-05, 'contract_name': 'ETH0517', 'unit_amount': 10, 'type': 3, 'price_avg': 265.304, 'deal_amount': 1, 'price': 265.304, 'create_date': 1557968404000, 'order_id': 2833278863744000, 'status': 2}]}
 reissuing_order = 0
 wait_for_completion = 1 # default is no wait
 def issue_order_now(symbol, contract, direction, amount, action):
@@ -378,16 +298,6 @@ def issue_quarter_order_now_conditional(symbol, direction, amount, action, must_
         return 0
     return issue_order_now_conditional(symbol, globals()['contract'], direction, amount, action, must_positive)
 
-# apikey = 'e2625f5d-6227-4cfd-9206-ffec43965dab'
-# secretkey = "27BD16FD606625BCD4EE6DCA5A8459CE"
-# okcoinRESTURL = 'www.okex.com'
-    
-# #现货API
-# okcoinSpot = OKCoinSpot(okcoinRESTURL,apikey,secretkey)
-
-# #期货API
-# okcoinFuture = OKCoinFuture(okcoinRESTURL,apikey,secretkey)
-
 
 old_open_price = 0
 old_close_mean = 0
@@ -403,11 +313,6 @@ symbols_mapping = { 'usd_btc': 'btc_usd',
                     'usd_xrp': 'xrp_usd',
                     'usd_bch': 'bch_usd'}
 
-reverse_dirs = { 'buy': {'reverse_dir':'sell', 'gate': lambda order_price, current_price, amount:
-                         (order_price > current_price) and check_close_sell_half_fee_threshold(order_price, current_price, amount)},
-                         
-                 'sell': {'reverse_dir':'buy', 'gate': lambda order_price, current_price, amount:
-                        (order_price < current_price) and check_close_sell_half_fee_threshold(current_price, order_price, amount)}}
 
 def figure_out_symbol_info(path):
     start_pattern = 'ok_sub_future'
@@ -417,62 +322,6 @@ def figure_out_symbol_info(path):
     # print (path[start:end])
     return path[start:end]
 
-# future_position_4fix return format
-# 期货逐仓持仓信息
-# {'result': True, 'holding': [{'buy_price_avg': 75.221, 'symbol': 'ltc_usd', 'lever_rate': 10, 'buy_available': 1, 'contract_id': 201906280010015, 'sell_risk_rate': '1,000,000.00', 'buy_amount': 1, 'buy_risk_rate': '99.84', 'profit_real': -3.988e-05, 'contract_type': 'quarter', 'sell_flatprice': '0.000', 'buy_bond': 0.01329151, 'sell_profit_lossratio': '0.00', 'buy_flatprice': '69.011', 'buy_profit_lossratio': '-0.14', 'sell_amount': 0, 'sell_bond': 0, 'sell_price_cost': 92.37172398, 'buy_price_cost': 75.221, 'create_date': 1552656524000, 'sell_price_avg': 92.37172398, 'sell_available': 0}]
-# {'result': True, 'holding': [{'buy_price_avg': 176.08158274, 'symbol': 'eth_usd', 'lever_rate': 10, 'buy_available': 0, 'contract_id': 201906280020041, 'sell_risk_rate': '99.36', 'buy_amount': 0, 'buy_risk_rate': '1,000,000.00', 'profit_real': -1.847e-05, 'contract_type': 'quarter', 'sell_flatprice': '178.453', 'buy_bond': 0, 'sell_profit_lossratio': '-0.66', 'buy_flatprice': '0.000', 'buy_profit_lossratio': '0.00', 'sell_amount': 1, 'sell_bond': 0.00615942, 'sell_price_cost': 162.388, 'buy_price_cost': 176.08158274, 'create_date': 1552656509000, 'sell_price_avg': 162.388, 'sell_available': 1}]}
-# if current order is permit to issue
-def check_open_order_gate(symbol, direction, current_price):
-    if options.emulate:
-        return True
-    if options.skip_gate_check:
-        return True
-    holding=json.loads(okcoinFuture.future_position_4fix(symbol, globals()['contract'], '1'))
-    if holding['result'] != True:
-        return False
-    if len(holding['holding']) == 0:
-        return True
-    # print (holding['holding'])
-    for data in holding['holding']:
-        if data['symbol'] == symbol:
-            dirs = reverse_dirs[direction]
-            # print (dirs, dirs['gate'])
-            if data['%s_amount' % dirs['reverse_dir']] == 0 :
-                return True;
-            else :
-                return dirs['gate'](data['%s_price_avg' % dirs['reverse_dir']], current_price, amount)
-    return False
-
-def query_bond(symbol, contract, direction):
-    if options.emulate:
-        return 0.0
-    holding=json.loads(okcoinFuture.future_position_4fix(symbol, contract, '1'))
-    if holding['result'] != True:
-        return 0.0 # 0 means failed
-    if len(holding['holding']) == 0:
-        return 0.0
-    for data in holding['holding']:
-        if data['symbol'] == symbol:
-            if data['%s_amount' % direction] > 0:
-                return data['%s_bond' % direction]/data['%s_amount' % direction]
-    return 0.0
-
-# future_userinfo_4fix format
-# {'result': True, 'info': {'btc': {'balance': 0.10077745, 'rights': 0.19425753, 'contracts': [{'contract_type': 'this_week', 'freeze': 0, 'balance': 0, 'contract_id': 201905170000013, 'available': 0.1116, 'profit': 0.0108896, 'bond': 0, 'unprofit': 0}, {'contract_type': 'quarter', 'freeze': 0, 'balance': 0, 'contract_id': 201906280000012, 'available': 0.1614, 'profit': 0.09122745, 'bond': 0.03053532, 'unprofit': -0.0087}]}, 'bsv': {'balance': 0, 'rights': 0, 'contracts': []}, 'etc': {'balance': 0, 'rights': 0, 'contracts': []}, 'bch': {'balance': 0.83989472, 'rights': 2.34665722, 'contracts': [{'contract_type': 'this_week', 'freeze': 0, 'balance': 0, 'contract_id': 201905173010074, 'available': 0.8664, 'profit': 0.02652685, 'bond': 0, 'unprofit': 0}, {'contract_type': 'quarter', 'freeze': 0, 'balance': 0, 'contract_id': 201906283010075, 'available': 2.1309, 'profit': 1.69430244, 'bond': 0.40325632, 'unprofit': -0.2141}]}, 'xrp': {'balance': 0, 'rights': 0, 'contracts': []}, 'eth': {'balance': 2.13255958, 'rights': 4.62345877, 'contracts': [{'contract_type': 'this_week', 'freeze': 0, 'balance': 0, 'contract_id': 201905170020042, 'available': 2.153, 'profit': 0.02053667, 'bond': 0, 'unprofit': 0}, {'contract_type': 'quarter', 'freeze': 0, 'balance': 0, 'contract_id': 201906280020041, 'available': 3.9439, 'profit': 2.53135193, 'bond': 0.71997122, 'unprofit': -0.0611}]}, 'eos': {'balance': 0.10395966, 'rights': 0.40952573, 'contracts': [{'contract_type': 'quarter', 'freeze': 0, 'balance': 0.17428396, 'contract_id': 201906280200053, 'available': 0.10395966, 'profit': -0.00052201, 'bond': 0.17376195, 'unprofit': 0.1318}]}, 'ltc': {'balance': 1.9931993, 'rights': 4.29178602, 'contracts': [{'contract_type': 'this_week', 'freeze': 0, 'balance': 0, 'contract_id': 201905170010016, 'available': 2.784, 'profit': 0.79088871, 'bond': 0, 'unprofit': 0}, {'contract_type': 'quarter', 'freeze': 0, 'balance': 0, 'contract_id': 201906280010015, 'available': 3.0551, 'profit': 1.68104735, 'bond': 0.61906728, 'unprofit': -0.1734}]}}}
-def query_balance(symbol):
-    if options.emulate:
-        return 0.0
-    coin = symbol[0:symbol.index('_')]
-    result=json.loads(okcoinFuture.future_userinfo_4fix())
-    if result['result'] != True:
-        return 0.0
-    return float(result['info'][coin]['rights'])
-
-#print ('quarter buy bond ', query_bond('eth_usd', 'quarter', 'buy'))
-#print ('quarter sell bond ', query_bond('eth_usd', 'quarter', 'sell'))
-#print ('rights ', query_balance('eth_usd'))
-#sys.exit(0)
-    
 def trade_timestamp():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
