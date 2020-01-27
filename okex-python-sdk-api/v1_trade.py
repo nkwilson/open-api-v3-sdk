@@ -393,51 +393,8 @@ def generate_trade_filename_new(dir, l_index, order_type, prefix=''):
 def generate_trade_filename(dir, l_index, order_type):
         global l_prefix
         global new_trade_file
-        if new_trade_file == True:
-            return generate_trade_filename_new(dir, l_index, order_type, l_prefix)
-        fname = '%s-trade-%s.%s' % (os.path.basename(dir), l_index, order_type)
-        #print (trade_file)
-        return os.path.join(os.path.dirname(dir), fname)
+        return generate_trade_filename_new(dir, l_index, order_type, l_prefix)
 
-#  '6179.63', '6183.09', '6178.98', '6180.34', '3148.0', '50.936313653924'
-# format: open, high, low, close, volume, total-value
-def read_close(filename):
-    close = 0
-    # drop '.boll' suffix
-    filename = os.path.splitext(filename)[0]
-    # print (filename)
-    if os.path.isfile(filename) == False: # in case not exist
-        return close
-    try:
-        with open(filename, 'r') as f:
-            line = eval(f.readline().rstrip('\n'))  # can't just copy from boll
-            close = float(line[3])
-            f.close()
-            # close = eval(f.readline())[3]
-    except Exception as ex:
-        print ('read_close: %s' % filename)
-    # print (close)
-    return close
-
-new_trade_file = True
-
-def try_to_pick_old_order():
-    global trade_notify, trade_file
-    global old_open_price
-    # first check trade_notify
-    if os.path.isfile(trade_notify) and os.path.getsize(trade_notify) > 0:
-        with open(trade_notify, 'r') as f:
-            line=f.readline().rstrip('\n')
-            f.close()
-            # print (line)
-            pathext = os.path.splitext(line)
-            # print (pathext)
-            if pathext[1][1:] == 'open': # means pending order
-                trade_file = pathext[0]
-                with open(trade_file, 'r') as f:
-                   old_open_price = float(f.readline().split(' ')[3].split(',')[0])
-                   f.close()
-                return
 
 # open, high, low, close == 4 prices
 def read_4prices(filename):
@@ -1335,9 +1292,6 @@ parser.add_option("", "--startup_notify", dest="startup_notify",
                   help="specify startup notifier")
 parser.add_option("", "--shutdown_notify", dest="shutdown_notify",
                   help="specify shutdown notifier")
-parser.add_option("", "--pick_old_order", dest='pick_old_order',
-                  action="store_true", default=False,
-                  help="do not pick old order")
 parser.add_option('', '--emulate', dest='emulate',
                   action="store_true", default=False,
                   help="try to emulate trade notify")
@@ -1390,8 +1344,6 @@ parser.add_option('', '--noaction', dest='noaction',
 print (type(options), options, args)
 
 latest_to_read = int(options.latest_to_read)
-
-pick_old_order = options.pick_old_order
 
 l_signal = options.signals[0]
 l_prefix = '%s_' % l_signal
@@ -1457,11 +1409,6 @@ if options.open_start_price != None:
     open_start_price = float(options.open_start_price)
 if options.previous_close != None:
     previous_close = float(options.previous_close)
-
-if pick_old_order == True:
-    try_to_pick_old_order()
-    if trade_file != '': # yes, old pending order exists
-        print ('### pick old order: %s, open price %f\n' % (trade_file, old_open_price))
 
 if options.startup_notify != None:
     startup_notify = options.startup_notify
