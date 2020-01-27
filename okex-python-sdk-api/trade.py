@@ -5,9 +5,12 @@ import okex.lever_api as lever
 import okex.spot_api as spot
 import json
 
-api_key = '1dadd0fb-0f7b-4649-b5c0-9ebe72f5a94b'
-secret_key = 'BBD0B6C295D9701BA29F88A2B10FA620'
-passphrase = ''
+api_key = "9b8f6039-a5db-4862-95b9-183404b95ac6"
+secret_key = "7AFDDC3FB2F9D3693B16BC1D6AB441EE"
+IP = "0"
+备注名 = "v3"
+权限 = "只读/交易"
+passphrase = 'v3api0'
 
 futureAPI = future.FutureAPI(api_key, secret_key, passphrase, True)
 
@@ -20,6 +23,43 @@ def query_orderinfo(symbol, contract, order_id):
     return futureAPI.get_order_info(order_id, query_instrument_id(symbol, contract))
 #    return futureAPI.future_orderinfo(symbol,contract, order_id,'0','1','2')
 
+def transform_direction(direction):
+    new_dirs = {'buy':'long', 'sell':'short'}
+    return new_dirs[direction]
+
+def check_holdings_profit(symbol, contract, direction):
+    nn = (0, 0, 0) # (loss, amount, bond)
+    loops = 3
+    instrument_id = query_instrument_id(symbol, contract)
+    while loops > 0:
+        loops -= 1
+        try:
+            holding=json.loads(futureAPI.get_specific_position(instrument_id))
+            if holding['result'] == False:
+                return nn
+            break
+        except Exception as ex:
+            time.sleep(1)
+    if loops == 0 or len(holding['holding']) == 0:
+        return nn
+    data = holding['holding'][0]
+    new_dir=transform_direction(direction)
+    loss = data['%s_pnl_ratio' % new_dir]
+    amount = data['%s_qty' % new_dir]
+    margin = data['%s_margin' % new_dir]
+    if (amount == 0):
+        return nn
+    else:
+        return (loss, amount, margin / amount)
+
+def query_bond(symbol, contract, direction):
+    pass
+
+def query_balance(symbol):
+    pass
+
+def future_kline(symbol, period, contract, code):
+    pass
 
 if __name__ == '__main__':
 
