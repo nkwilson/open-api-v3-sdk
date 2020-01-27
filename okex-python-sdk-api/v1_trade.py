@@ -431,26 +431,6 @@ ID_HIGH=1
 ID_LOW=2
 ID_CLOSE=3
 
-# Whether symbol holding is closed forecly
-def check_forced_close(symbol, direction, prices):
-    if prices != None: # when do emulation
-        if direction == 'buy' and open_price > prices[ID_LOW]:
-            return ((open_price - prices[ID_LOW]) / open_price) >= 0.1  # rate is 10
-        elif direction == 'sell' and open_price > 0 and open_price < prices[ID_HIGH]:
-            return ((open_price - prices[ID_HIGH]) / open_price) <= -0.1  # rate is 10
-        else:
-            return False
-    holding=json.loads(okcoinFuture.future_position_4fix(symbol, globals()['contract'], '1'))
-    if holding['result'] != True:
-        return False
-    if len(holding['holding']) == 0:
-        return False
-    # print (holding['holding'])
-    for data in holding['holding']:
-        if data['symbol'] == symbol:
-            return data['%s_amount' % direction] == 0
-    pass
-
 # Check price and return calcuated profit, zero means do greedy open otherwite close holding
 def check_with_direction(close, previous_close, open_price, open_start_price, l_dir, open_greedy):
     global last_decision_logic
@@ -587,7 +567,6 @@ def loadsave_status(signal, load):
 names_tit2tat = ['trade_file',
                  'previous_close',
                  'open_start_price',
-                 'next_open_start_price',
                  'open_price',
                  'open_cost',
                  'open_greedy',
@@ -692,7 +671,6 @@ def get_multiple_profit4(close, previoud_close, open_price, open_start_price, l_
         current_profit3 = previous_close - close
     return (current_profit, current_profit1, current_profit2, current_profit3)
 
-next_open_start_price = 0
 last_fee = 0
 open_cost = 0
 quarter_amount = 1
@@ -736,7 +714,6 @@ def try_to_trade_tit2tat(subpath, guard=False):
     global open_cost
     global quarter_amount, thisweek_amount_pending
     global last_bond, last_balance
-    global next_open_start_price
     global last_decision_logic
     global ema_1, ema_1_up, ema_1_lo
     global ema_2, ema_2_up, ema_2_lo
@@ -846,15 +823,9 @@ def try_to_trade_tit2tat(subpath, guard=False):
                     if l_dir == 'buy':
                         delta = open_price - prices[ID_LOW]
                         new_open_start_price = prices[ID_LOW]
-                        if next_open_start_price < new_open_start_price and new_open_start_price < open_price:
-                            next_open_start_price = new_open_start_price
                     else: # sell
                         delta = prices[ID_HIGH] - open_price
                         new_open_start_price = prices[ID_HIGH]
-                        if next_open_start_price > new_open_start_price and new_open_start_price > open_price:
-                            next_open_start_price = new_open_start_price
-                    if next_open_start_price == 0:
-                        next_open_start_price = new_open_start_price
                     if delta < 0.001: # zero means too small
                         t_amount = 1
                     else:
@@ -1041,8 +1012,6 @@ def try_to_trade_tit2tat(subpath, guard=False):
                             new_quarter_amount = math.ceil(base_amount / amount_ratio + base_amount * amount_ratio_plus)
                         if new_quarter_amount < 1:
                             new_quarter_amount = quarter_amount # means no real update
-                        if abs(close - next_open_start_price) > profit_cost_multiplier * open_cost: # only update if enough gap
-                            open_start_price = (open_start_price + next_open_start_price) / 2 # if new order, update open_start_price from next_open_start_price
                         do_updating = 'no '
                         if update_quarter_amount_forward and delta_balance > 0 and quarter_amount < new_quarter_amount : # auto update
                             do_updating = 'do '
