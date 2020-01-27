@@ -14,8 +14,6 @@ import math
 import datetime
 from datetime import datetime as dt
 
-import pipes
-
 from OkcoinSpotAPI import OKCoinSpot
 from OkcoinFutureAPI import OKCoinFuture
 
@@ -1114,45 +1112,6 @@ old_close = 0
 average_open_price = 0
 old_delta = 0
 delta = 0
-                
-# generate file list
-def with_listdir(l_dir):
-    return os.listdir(l_dir)
-
-# v2, fast than listdir
-def with_scandir(l_dir):
-    files = list()
-    with os.scandir(l_dir) as it:
-        for entry in it:
-            if entry.name.endswith('.boll') == True:
-                files.append(entry.name)
-    return files
-
-
-# process saved prices in specified dir
-def plot_saved_price(l_dir):
-    global old_close_mean
-    try:
-        files = with_scandir(l_dir)
-        files.sort()
-        to_read = len(files)
-        if to_read > latest_to_read:
-            to_read = latest_to_read
-        print ('Total %d files, read latest %d' % (len(files), to_read))
-        for fname in files[-to_read:]:
-            fpath = os.path.join(l_dir, fname)
-            boll = read_boll(fpath)
-            try:
-                    # ignore nan data
-                    if math.isnan(boll[0]) == False:
-                            # save old close_mean
-                            old_close_mean = boll[0]
-            except Exception as ex:
-                    print (fpath)
-        files = None
-        #print (close_mean)
-    except Exception as ex:
-        print (traceback.format_exc())
 
 def with_scandir_tit2tat(l_dir):
     files = list()
