@@ -104,8 +104,8 @@ def check_holdings_profit(symbol, contract, direction):
     data = holding['holding'][0]
     new_dir=transform_direction(direction)
     loss = data['%s_pnl_ratio' % new_dir]
-    amount = data['%s_qty' % new_dir]
-    margin = data['%s_margin' % new_dir]
+    amount = float(data['%s_qty' % new_dir])
+    margin = float(data['%s_margin' % new_dir])
     if (amount == 0):
         return nn
     else:
@@ -124,7 +124,7 @@ def real_open_price_and_cost(symbol, contract, direction):
     data=holding['holding'][0]
     if data['%s_qty' % l_dir] != 0:
         avg = float(data['%s_avg_cost' % l_dir])
-        real = float(data['%s_pnl_ratio' % l_dir] / data['%s_leverage' % l_dir])
+        real = float(data['%s_pnl_ratio' % l_dir])/float(data['%s_leverage' % l_dir])
         return (avg, avg*real)
     return 0
 
@@ -138,7 +138,7 @@ def query_bond(symbol, contract, direction):
     l_dir=transform_direction(direction)
     data=holding['holding'][0]
     if data['%s_qty' % l_dir] != 0:
-        return data['%s_margin' % l_dir]/data['%s_qty' % l_dir]
+        return float(data['%s_margin' % l_dir])/float(data['%s_qty' % l_dir])
     return 0.0
 
 # In [25]: futureAPI.get_coin_account('BTC-USD')
