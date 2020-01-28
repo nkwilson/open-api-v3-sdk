@@ -14,7 +14,7 @@ futureAPI = future.FutureAPI(api_key, secret_key, passphrase, True)
 
 # symbol is like BTC-USD, contract is like quarter/this_week/next_week
 def query_instrument_id(symbol, contract):
-    result = json.dump(futureAPI.get_products())
+    result = futureAPI.get_products()
     return list(filter(lambda i: i['alias'] == contract.upper() and i['underlying'] == symbol.upper(), result))[0]['instrument_id']
 
 def transform_direction(direction):
@@ -38,7 +38,7 @@ def close_order_buy_rate(symbol, contract, amount, price='', lever_rate='10'):
     #return okcoinFuture.future_trade(symbol, contract, '', amount, '3',                                     '1', '10')
 
 def cancel_order(symbol, contract, order_id):
-    return futureAPI.revoke_order(instrument_id=query_instrument_id(symbol, contract), order_id)
+    return futureAPI.revoke_order(instrument_id=query_instrument_id(symbol, contract), order_id=order_id)
     #return okcoinFuture.future_cancel(symbol, contract, order_id)
 
 def query_orderinfo(symbol, contract, order_id):
@@ -93,7 +93,7 @@ def check_holdings_profit(symbol, contract, direction):
     while loops > 0:
         loops -= 1
         try:
-            holding=json.loads(futureAPI.get_specific_position(instrument_id))
+            holding=futureAPI.get_specific_position(instrument_id)
             if holding['result'] == False:
                 return nn
             break
@@ -114,7 +114,7 @@ def check_holdings_profit(symbol, contract, direction):
 # Figure out current holding's open price, zero means no holding
 def real_open_price_and_cost(symbol, contract, direction):
     instrument_id = query_instrument_id(symbol, contract)
-    holding=json.loads(futureAPI.get_specific_position(instrument_id))
+    holding=futureAPI.get_specific_position(instrument_id)
     if holding['result'] != True:
         return 0
     if len(holding['holding']) == 0:
@@ -130,7 +130,7 @@ def real_open_price_and_cost(symbol, contract, direction):
 
 def query_bond(symbol, contract, direction):
     instrument_id = query_instrument_id(symbol, contract)
-    holding=json.loads(futureAPI.get_specific_position(instrument_id))
+    holding=futureAPI.get_specific_position(instrument_id)
     if holding['result'] != True:
         return 0.0 # 0 means failed
     if len(holding['holding']) == 0:
@@ -159,9 +159,8 @@ def query_bond(symbol, contract, direction):
 #  'total_avail_balance': '3.59490925'}
 
 def query_balance(symbol):
-    coin = symbol[0:symbol.index('_')]
     try:
-        result=json.loads(futureAPI.get_coin_account(coin.replace('_', '-')))
+        result=futureAPI.get_coin_account(symbol.replace('_', '-').upper())
         return result['equity']
     except Exception as ex:
         return 0.0
