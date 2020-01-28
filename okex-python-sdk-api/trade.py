@@ -53,13 +53,40 @@ def check_holdings_profit(symbol, contract, direction):
         return (loss, amount, margin / amount)
 
 def query_bond(symbol, contract, direction):
+    print ('query_bond %s %s %s' % (symbol, contract, direction))
     pass
 
 def query_balance(symbol):
+    print ('query_balance %s' % (symbol))
     pass
 
 def future_kline(symbol, period, contract, code):
+    print ('future_kline %s %s %s %s' % (symbol, period, contract, code))
     pass
+
+def open_order_sell_rate(symbol, contract, amount, price='', lever_rate='10'):
+    return futureAPI.take_order(instrument_id=query_instrument_id(symbol, contract), type=2, size=amount, match_price=1)
+    #return okcoinFuture.future_trade(symbol, contract, '', amount, '2', '1', '10')
+
+def close_order_sell_rate(symbol, contract, amount, price='', lever_rate='10'):
+    return futureAPI.take_order(instrument_id=query_instrument_id(symbol, contract), type=4, size=amount, match_price=1)
+    #return okcoinFuture.future_trade(symbol, contract, '', amount, '4',                                     '1', '10')
+
+def open_order_buy_rate(symbol, contract, amount, price='', lever_rate='10'):
+    return futureAPI.take_order(instrument_id=query_instrument_id(symbol, contract), type=1, size=amount, match_price=1)
+    #return okcoinFuture.future_trade(symbol, contract, '', amount, '1',                                     '1', '10')
+
+def close_order_buy_rate(symbol, contract, amount, price='', lever_rate='10'):
+    return futureAPI.take_order(instrument_id=query_instrument_id(symbol, contract), type=3, size=amount, match_price=1)
+    #return okcoinFuture.future_trade(symbol, contract, '', amount, '3',                                     '1', '10')
+
+def cancel_order(symbol, contract, order_id):
+    return futureAPI.revoke_order(instrument_id=query_instrument_id(symbol, contract), order_id)
+    #return okcoinFuture.future_cancel(symbol, contract, order_id)
+
+def query_orderinfo(symbol, contract, order_id):
+    return futureAPI.get_order_info(order_id, instrument_id=query_instrument_id(symbol, contract))
+    #return okcoinFuture.future_orderinfo(symbol,contract, order_id,'0','1','2')
 
 if __name__ == '__main__':
 
