@@ -100,7 +100,7 @@ def issue_order_now(symbol, contract, direction, amount, action):
             globals()['amount_ratio'] = float(order_info['orders'][0]['lever_rate'])
             deal_amount = order_info['orders'][0]['deal_amount']
             if order_info['orders'][0]['amount'] != deal_amount:
-                if deal_amount > 0 and wait_for_completion == 0: # it's ok
+                if wait_for_completion == 0: # it's ok
                     # no update for last_fee
                     return (True, order_info['orders'][0]['price'])
                 else: # should wait 
@@ -660,19 +660,23 @@ def try_to_trade_tit2tat(subpath, guard=False):
             ema_tendency = new_ema_2 - new_ema_1_lo # ema_2 should bigger than ema_1_lo
             reverse_follow_dir = 'buy'
             price_delta = (previous_close - close) / previous_close
-            print ('%9.4f' % -close, '%9.4f' % open_price, l_dir, 'gate %9.4f' % open_start_price,
-                   'ema_%d:%9.4f' % (ema_period_1, new_ema_1), 'ema_%d:%9.4f' % (ema_period_2, new_ema_2),
+            print ('%9.4f' % -close, '%9.4f' % open_price, l_dir, 
+                   'ema_%d:%9.4f' % (ema_period_1, new_ema_1),
+                   'ema_%d:%9.4f' % (ema_period_2, new_ema_2),
                    'ema_%d signal:%9.4f' % (ema_period_1, new_ema_1_lo),
-                   'greedy : %f' % greedy_count
+                   'greedy : %f' % greedy_count,
+                   'cost: %9.4f:%.2f' % (open_cost, globals()['greedy_cost_multiplier'])
             )
         elif l_dir == 'buy': # buy order
             ema_tendency = new_ema_1_up - new_ema_2 # ema_1_up should bigger than ema_2
             reverse_follow_dir = 'sell'
             price_delta = (close - previous_close) / previous_close
-            print ('%9.4f' % close, '%9.4f' % -open_price, l_dir, 'gate %9.4f' % open_start_price,
-                   'ema_%d:%9.4f' % (ema_period_1, new_ema_1), 'ema_%d:%9.4f' % (ema_period_2, new_ema_2),
+            print ('%9.4f' % close, '%9.4f' % -open_price, l_dir, 
+                   'ema_%d:%9.4f' % (ema_period_1, new_ema_1),
+                   'ema_%d:%9.4f' % (ema_period_2, new_ema_2),
                    'ema_%d signal:%9.4f' % (ema_period_1, new_ema_1_up),
-                   'greedy : %f' % greedy_count
+                   'greedy : %f' % greedy_count,
+                   'cost: %9.4f:%.2f' % (open_cost, globals()['greedy_cost_multiplier'])
             )                   
         ema_1 = new_ema_1 # saved now
         ema_1_up = new_ema_1_up
