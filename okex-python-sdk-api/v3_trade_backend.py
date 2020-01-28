@@ -8,8 +8,6 @@ import json
 api_key = "9b8f6039-a5db-4862-95b9-183404b95ac6"
 secret_key = "7AFDDC3FB2F9D3693B16BC1D6AB441EE"
 IP = "0"
-备注名 = "v3"
-权限 = "只读/交易"
 passphrase = 'v3api0'
 
 futureAPI = future.FutureAPI(api_key, secret_key, passphrase, True)
@@ -19,14 +17,75 @@ def query_instrument_id(symbol, contract):
     result = json.dump(futureAPI.get_products())
     return list(filter(lambda i: i['alias'] == contract.upper() and i['underlying'] == symbol.upper(), result))[0]['instrument_id']
 
-def query_orderinfo(symbol, contract, order_id):
-    return futureAPI.get_order_info(order_id, query_instrument_id(symbol, contract))
-#    return futureAPI.future_orderinfo(symbol,contract, order_id,'0','1','2')
-
 def transform_direction(direction):
     new_dirs = {'buy':'long', 'sell':'short'}
     return new_dirs[direction]
 
+def open_order_sell_rate(symbol, contract, amount, price='', lever_rate='10'):
+    return futureAPI.take_order(instrument_id=query_instrument_id(symbol, contract), type=2, size=amount, match_price=1)
+    #return okcoinFuture.future_trade(symbol, contract, '', amount, '2', '1', '10')
+
+def close_order_sell_rate(symbol, contract, amount, price='', lever_rate='10'):
+    return futureAPI.take_order(instrument_id=query_instrument_id(symbol, contract), type=4, size=amount, match_price=1)
+    #return okcoinFuture.future_trade(symbol, contract, '', amount, '4',                                     '1', '10')
+
+def open_order_buy_rate(symbol, contract, amount, price='', lever_rate='10'):
+    return futureAPI.take_order(instrument_id=query_instrument_id(symbol, contract), type=1, size=amount, match_price=1)
+    #return okcoinFuture.future_trade(symbol, contract, '', amount, '1',                                     '1', '10')
+
+def close_order_buy_rate(symbol, contract, amount, price='', lever_rate='10'):
+    return futureAPI.take_order(instrument_id=query_instrument_id(symbol, contract), type=3, size=amount, match_price=1)
+    #return okcoinFuture.future_trade(symbol, contract, '', amount, '3',                                     '1', '10')
+
+def cancel_order(symbol, contract, order_id):
+    return futureAPI.revoke_order(instrument_id=query_instrument_id(symbol, contract), order_id)
+    #return okcoinFuture.future_cancel(symbol, contract, order_id)
+
+def query_orderinfo(symbol, contract, order_id):
+    return futureAPI.get_order_info(order_id, query_instrument_id(symbol, contract))
+#    return futureAPI.future_orderinfo(symbol,contract, order_id,'0','1','2')
+
+def query_kline(symbol, period, contract, ktype):
+    return futureAPI.get_kline(query_instrument_id(symbol, contract), granularity=period)
+    #return okcoinFuture.future_kline(symbol, period, contract, ktype)
+
+# In [13]: futureAPI.get_specific_position('BTC-USD-200327')
+# Out[13]: 
+# {'holding': [{'created_at': '2019-12-13T11:59:47.180Z',
+#    'instrument_id': 'BTC-USD-200327',
+#    'last': '9255.96',
+#    'long_avail_qty': '453',
+#    'long_avg_cost': '9259.81231406',
+#    'long_leverage': '10',
+#    'long_liqui_price': '8464.52',
+#    'long_maint_margin_ratio': '0.005',
+#    'long_margin': '0.5002992',
+#    'long_margin_ratio': '0.09960771',
+#    'long_pnl': '-0.00174529',
+#    'long_pnl_ratio': '-0.0035676',
+#    'long_qty': '453',
+#    'long_settled_pnl': '0.01108841',
+#    'long_settlement_price': '9280.8482067',
+#    'long_unrealised_pnl': '-0.0128337',
+#    'margin_mode': 'fixed',
+#    'realised_pnl': '-0.00103693',
+#    'short_avail_qty': '203',
+#    'short_avg_cost': '9258.91',
+#    'short_leverage': '10',
+#    'short_liqui_price': '10231.48',
+#    'short_maint_margin_ratio': '0.005',
+#    'short_margin': '0.21924827',
+#    'short_margin_ratio': '0.10023329',
+#    'short_pnl': '5.6846E-4',
+#    'short_pnl_ratio': '0.0025928',
+#    'short_qty': '203',
+#    'short_settled_pnl': '0',
+#    'short_settlement_price': '9258.91',
+#    'short_unrealised_pnl': '5.6846E-4',
+#    'updated_at': '2020-01-28T09:01:14.380Z'}],
+#  'margin_mode': 'fixed',
+#  'result': True}
+    
 def check_holdings_profit(symbol, contract, direction):
     nn = (0, 0, 0) # (loss, amount, bond)
     loops = 3
@@ -52,41 +111,60 @@ def check_holdings_profit(symbol, contract, direction):
     else:
         return (loss, amount, margin / amount)
 
+# Figure out current holding's open price, zero means no holding
+def real_open_price_and_cost(symbol, contract, direction):
+    instrument_id = query_instrument_id(symbol, contract)
+    holding=json.loads(futureAPI.get_specific_position(instrument_id))
+    if holding['result'] != True:
+        return 0
+    if len(holding['holding']) == 0:
+        return 0
+    # print (holding['holding'])
+    l_dir=transform_direction(direction)
+    data=holding['holding'][0]
+    if data['%s_qty' % l_dir] != 0:
+        avg = float(data['%s_avg_cost' % l_dir])
+        real = float(data['%s_pnl_ratio' % l_dir] / data['%s_leverage' % l_dir])
+        return (avg, avg*real)
+    return 0
+
 def query_bond(symbol, contract, direction):
-    print ('query_bond %s %s %s' % (symbol, contract, direction))
-    pass
+    instrument_id = query_instrument_id(symbol, contract)
+    holding=json.loads(futureAPI.get_specific_position(instrument_id))
+    if holding['result'] != True:
+        return 0.0 # 0 means failed
+    if len(holding['holding']) == 0:
+        return 0.0
+    l_dir=transform_direction(direction)
+    data=holding['holding'][0]
+    if data['%s_qty' % l_dir] != 0:
+        return data['%s_margin' % l_dir]/data['%s_qty' % l_dir]
+    return 0.0
+
+# In [25]: futureAPI.get_coin_account('BTC-USD')
+# Out[25]: 
+# {'auto_margin': '1',
+#  'can_withdraw': '3.59490925',
+#  'contracts': [{'available_qty': '3.59490925',
+#    'fixed_balance': '0.7205844',
+#    'instrument_id': 'BTC-USD-200327',
+#    'margin_for_unfilled': '0',
+#    'margin_frozen': '0.71954747',
+#    'realized_pnl': '-0.00103693',
+#    'unrealized_pnl': '-0.0053'}],
+#  'currency': 'BTC',
+#  'equity': '4.309263',
+#  'liqui_mode': 'tier',
+#  'margin_mode': 'fixed',
+#  'total_avail_balance': '3.59490925'}
 
 def query_balance(symbol):
-    print ('query_balance %s' % (symbol))
-    pass
-
-def future_kline(symbol, period, contract, code):
-    print ('future_kline %s %s %s %s' % (symbol, period, contract, code))
-    pass
-
-def open_order_sell_rate(symbol, contract, amount, price='', lever_rate='10'):
-    return futureAPI.take_order(instrument_id=query_instrument_id(symbol, contract), type=2, size=amount, match_price=1)
-    #return okcoinFuture.future_trade(symbol, contract, '', amount, '2', '1', '10')
-
-def close_order_sell_rate(symbol, contract, amount, price='', lever_rate='10'):
-    return futureAPI.take_order(instrument_id=query_instrument_id(symbol, contract), type=4, size=amount, match_price=1)
-    #return okcoinFuture.future_trade(symbol, contract, '', amount, '4',                                     '1', '10')
-
-def open_order_buy_rate(symbol, contract, amount, price='', lever_rate='10'):
-    return futureAPI.take_order(instrument_id=query_instrument_id(symbol, contract), type=1, size=amount, match_price=1)
-    #return okcoinFuture.future_trade(symbol, contract, '', amount, '1',                                     '1', '10')
-
-def close_order_buy_rate(symbol, contract, amount, price='', lever_rate='10'):
-    return futureAPI.take_order(instrument_id=query_instrument_id(symbol, contract), type=3, size=amount, match_price=1)
-    #return okcoinFuture.future_trade(symbol, contract, '', amount, '3',                                     '1', '10')
-
-def cancel_order(symbol, contract, order_id):
-    return futureAPI.revoke_order(instrument_id=query_instrument_id(symbol, contract), order_id)
-    #return okcoinFuture.future_cancel(symbol, contract, order_id)
-
-def query_orderinfo(symbol, contract, order_id):
-    return futureAPI.get_order_info(order_id, instrument_id=query_instrument_id(symbol, contract))
-    #return okcoinFuture.future_orderinfo(symbol,contract, order_id,'0','1','2')
+    coin = symbol[0:symbol.index('_')]
+    try:
+        result=json.loads(futureAPI.get_coin_account(coin.replace('_', '-')))
+        return result['equity']
+    except Exception as ex:
+        return 0.0
 
 if __name__ == '__main__':
 
