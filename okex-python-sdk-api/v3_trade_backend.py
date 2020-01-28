@@ -103,7 +103,7 @@ def check_holdings_profit(symbol, contract, direction):
         return nn
     data = holding['holding'][0]
     new_dir=transform_direction(direction)
-    loss = data['%s_pnl_ratio' % new_dir]
+    loss = float(data['%s_pnl_ratio' % new_dir])
     amount = float(data['%s_qty' % new_dir])
     margin = float(data['%s_margin' % new_dir])
     if (amount == 0):
@@ -161,7 +161,7 @@ def query_bond(symbol, contract, direction):
 def query_balance(symbol):
     try:
         result=futureAPI.get_coin_account(symbol.replace('_', '-').upper())
-        return result['equity']
+        return float(result['equity'])
     except Exception as ex:
         return 0.0
 
