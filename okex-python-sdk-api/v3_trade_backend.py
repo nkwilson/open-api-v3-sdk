@@ -15,7 +15,7 @@ futureAPI = future.FutureAPI(api_key, secret_key, passphrase, True)
 # symbol is like BTC-USD, contract is like quarter/this_week/next_week
 def query_instrument_id(symbol, contract):
     result = futureAPI.get_products()
-    return list(filter(lambda i: i['alias'] == contract.upper() and i['underlying'] == symbol.upper(), result))[0]['instrument_id']
+    return list(filter(lambda i: i['alias'] == contract and i['underlying'] == symbol.upper().replace('_', '-'), result))[0]['instrument_id']
 
 def transform_direction(direction):
     new_dirs = {'buy':'long', 'sell':'short'}
@@ -45,7 +45,7 @@ def query_orderinfo(symbol, contract, order_id):
     return futureAPI.get_order_info(order_id, query_instrument_id(symbol, contract))
 #    return futureAPI.future_orderinfo(symbol,contract, order_id,'0','1','2')
 
-def query_kline(symbol, period, contract, ktype):
+def query_kline(symbol, period, contract, ktype=''):
     return futureAPI.get_kline(query_instrument_id(symbol, contract), granularity=period)
     #return okcoinFuture.future_kline(symbol, period, contract, ktype)
 
