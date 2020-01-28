@@ -45,6 +45,16 @@ def query_orderinfo(symbol, contract, order_id):
     return futureAPI.get_order_info(order_id, query_instrument_id(symbol, contract))
 #    return futureAPI.future_orderinfo(symbol,contract, order_id,'0','1','2')
 
+# In [7]: backend.query_kline('bch_usd', '300', 'this_week')
+# Out[7]: 
+# [['2020-01-28T11:20:00.000Z',
+#   '372.63',
+#   '372.85',
+#   '371.45',
+#   '371.52',
+#   '8727',
+#   '233.17'],
+
 def query_kline(symbol, period, contract, ktype=''):
     return futureAPI.get_kline(query_instrument_id(symbol, contract), granularity=period)
     #return okcoinFuture.future_kline(symbol, period, contract, ktype)
