@@ -65,6 +65,9 @@ def cancel_order(symbol, contract, order_id):
 def query_orderinfo(symbol, contract, order_id):
     return okcoinFuture.future_orderinfo(symbol,contract, order_id,'0','1','2')
 
+def query_kline(symbol, period, contract, ktype):
+    return okcoinFuture.future_kline(symbol, period, contract, ktype)
+
 def check_holdings_profit(symbol, contract, direction):
     nn = (0,0)
     loops = 5
@@ -94,9 +97,22 @@ def check_holdings_profit(symbol, contract, direction):
                 return (loss, amount)
     return nn
 
+# Figure out current holding's open price, zero means no holding
+def real_open_price_and_cost(symbol, contract, direction):
+    holding=json.loads(okcoinFuture.future_position_4fix(symbol, contract, '1'))
+    if holding['result'] != True:
+        return 0
+    if len(holding['holding']) == 0:
+        return 0
+    # print (holding['holding'])
+    for data in holding['holding']:
+        if data['symbol'] == symbol and data['%s_amount' % direction] != 0:
+            avg = float(data['%s_price_avg' % direction])
+            real= float(data['profit_real'])
+            return (avg, avg*real)
+    return 0
+
 def query_bond(symbol, contract, direction):
-    if options.emulate:
-        return 0.0
     holding=json.loads(okcoinFuture.future_position_4fix(symbol, contract, '1'))
     if holding['result'] != True:
         return 0.0 # 0 means failed
@@ -109,8 +125,6 @@ def query_bond(symbol, contract, direction):
     return 0.0
 
 def query_balance(symbol):
-    if options.emulate:
-        return 0.0
     coin = symbol[0:symbol.index('_')]
     result=json.loads(okcoinFuture.future_userinfo_4fix())
     if result['result'] != True:

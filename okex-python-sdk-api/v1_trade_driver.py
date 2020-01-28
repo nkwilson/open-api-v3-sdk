@@ -1,21 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import getopt
 import traceback
 
 import datetime
 
 import os
-import os.path as path
 import time
 import random
 import math
-import datetime
 from datetime import datetime as dt
 
 import subprocess
-from subprocess import PIPE, run
+from subprocess import PIPE
 
 
 import logging
@@ -36,7 +33,7 @@ limit_amount = 0
 #import trade_elite
 import json
 
-import v1_trade_backend
+import v1_trade_backend as backend
 
 # demo: ok_sub_futureusd_btc_kline_quarter_4hou
 def figure_out_symbol_info(path):
@@ -70,10 +67,10 @@ order_infos = {'usd_btc':'btc_usd',
                'usd_eos':'eos_usd',                              
                'usd_bch':'bch_usd',
                'usd_xrp':'xrp_usd',
-               'sell':{'open':open_order_sell_rate,
-                       'close':close_order_sell_rate},
-               'buy':{'open':open_order_buy_rate,
-                      'close':close_order_buy_rate}}
+               'sell':{'open': backend.open_order_sell_rate,
+                       'close':backend.close_order_sell_rate},
+               'buy':{'open':backend.open_order_buy_rate,
+                      'close':backend.close_order_buy_rate}}
 
 reissuing_order = 0
 wait_for_completion = 1 # default is no wait
@@ -92,13 +89,12 @@ def issue_order_now(symbol, contract, direction, amount, action):
     #print (order_id)
     if wait_for_completion > 0: # only valid if positive
         time.sleep(wait_for_completion)
-    raw_order_info = query_orderinfo(symbol, contract, order_id)
+    raw_order_info = backend.query_orderinfo(symbol, contract, order_id)
     if result['result'] == False: # something is wrong
         reissuing_order += 1
     else:
         order_info = json.loads(raw_order_info)
         #print (order_info)
-        new_amount = 0
         try: # in case amount too much 
             # update amount_ratio from current order's lever_rate field
             globals()['amount_ratio'] = float(order_info['orders'][0]['lever_rate'])
@@ -122,7 +118,7 @@ def issue_order_now(symbol, contract, direction, amount, action):
         reissuing_order = 0
         return (False, 0)
     print ('try to cancel pending order and reissue', ' amount = %d' % amount)
-    cancel_order(symbol, contract, order_id)
+    backend.cancel_order(symbol, contract, order_id)
     return issue_order_now(symbol, contract, direction, amount, action)
 
 # orders need to close, sorted by price
@@ -131,7 +127,7 @@ orders_holding ={'sell':{'reverse':False, 'holding':list()},
 
 # only for close
 def issue_order_now_conditional(symbol, contract, direction, amount, action, must_positive=True):
-    (loss, t_amount) = check_holdings_profit(symbol, contract, direction)
+    (loss, t_amount) = backend.check_holdings_profit(symbol, contract, direction)
     if t_amount == 0:
         return 0 # no operation
     holding=orders_holding[direction]['holding']
@@ -163,7 +159,7 @@ def issue_order_now_conditional(symbol, contract, direction, amount, action, mus
     amount = min(t_amount, amount) # get little on
     while len(holding) > 0:
         (price, l_amount)=holding.pop()
-        if globals()['positive_greedy_tiny_profit'](price, direction) == True:
+        if globals()['positive_greedy_profit'](price, direction) == True:
             # print ('(%s, %s) selected' % (price, l_amount))
             total_amount += l_amount
             if amount > 0 and total_amount > amount:
@@ -214,14 +210,6 @@ symbols_mapping = { 'usd_btc': 'btc_usd',
                     'usd_xrp': 'xrp_usd',
                     'usd_bch': 'bch_usd'}
 
-
-def figure_out_symbol_info(path):
-    start_pattern = 'ok_sub_future'
-    end_pattern = '_kline_'
-    start = path.index(start_pattern) + len(start_pattern)
-    end = path.index(end_pattern)
-    # print (path[start:end])
-    return path[start:end]
 
 def trade_timestamp():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -421,26 +409,11 @@ def check_with_direction(close, previous_close, open_price, open_start_price, l_
 def calculate_amount(symbol):
     if last_bond == 0.0:
         return 1  # in case error, just process 1 ticket
-    last_balance = quarter_auto_balance(symbol)
+    last_balance = backend.quarter_auto_balance(symbol)
     if last_balance == 0.0:
         return 1 # just in case
     return int(last_balance / last_bond / 10 + 0.5)
     pass
-
-# Figure out current holding's open price, zero means no holding
-def real_open_price_and_cost(symbol, contract, direction):
-    holding=json.loads(okcoinFuture.future_position_4fix(symbol, contract, '1'))
-    if holding['result'] != True:
-        return 0
-    if len(holding['holding']) == 0:
-        return 0
-    # print (holding['holding'])
-    for data in holding['holding']:
-        if data['symbol'] == symbol and data['%s_amount' % direction] != 0:
-            avg = float(data['%s_price_avg' % direction])
-            real= float(data['profit_real'])
-            return (avg, avg*real)
-    return 0
 
 def try_loadsave_with_names(status, names, load):
     if not load:
@@ -658,8 +631,8 @@ def try_to_trade_tit2tat(subpath, guard=False):
             globals()['signal_open_order_with_%s' % l_dir](l_index, trade_file, close)
             issue_quarter_order_now(symbol, l_dir, quarter_amount, 'open')
 
-            (open_price, no_use) = real_open_price_and_cost(symbol, globals()['contract'], l_dir) if not options.emulate else (close, 0.001)
-            t_bond = query_bond(symbol, globals()['contract'], l_dir)
+            (open_price, no_use) = backend.real_open_price_and_cost(symbol, globals()['contract'], l_dir) if not options.emulate else (close, 0.001)
+            t_bond = backend.query_bond(symbol, globals()['contract'], l_dir)
             if t_bond > 0:
                 last_bond = t_bond
                 t_open_cost = open_price * last_fee / last_bond  # just see cost
@@ -734,7 +707,7 @@ def try_to_trade_tit2tat(subpath, guard=False):
                     else:
                         t_amount = open_price - delta * amount_ratio # calcuate by forced close probability
                     if not options.emulate: # if emualtion, figure it manually
-                        (loss, t_amount) = check_holdings_profit(symbol, globals()['contract'], l_dir)
+                        (loss, t_amount) = backend.check_holdings_profit(symbol, globals()['contract'], l_dir)
                     if t_amount <= 0:
                         # check if should take normal close action
                         (current_profit, current_profit1, current_profit2, current_profit3) = get_multiple_profit4(close, previous_close, open_price, open_start_price, l_dir, open_greedy)
@@ -756,7 +729,7 @@ def try_to_trade_tit2tat(subpath, guard=False):
                     issue_quarter_order_now(symbol, l_dir, mini_amount, 'open')
                     # clear it
                     thisweek_amount_pending = 0
-                    (open_price, no_use) = real_open_price_and_cost(symbol, globals()['contract'], l_dir) if not options.emulate else (close, 0.001)
+                    (open_price, no_use) = backend.real_open_price_and_cost(symbol, globals()['contract'], l_dir) if not options.emulate else (close, 0.001)
                     if l_dir == 'buy' and open_start_price < new_open_start_price:
                         open_start_price = (open_start_price + new_open_start_price) / 2
                     elif l_dir == 'sell' and open_start_price > new_open_start_price:
@@ -774,7 +747,6 @@ def try_to_trade_tit2tat(subpath, guard=False):
                         forced_close = False # let stop it here
                         current_profit1 = 0
                         current_profit2 = 0
-                        current_profit3 = 0
                     issuing_close = False
                     if current_profit1 <= -greedy_cost_multiplier * open_cost: # no, negative
                         # take ema into account
@@ -903,7 +875,7 @@ def try_to_trade_tit2tat(subpath, guard=False):
                         trade_file = '' # clear it
                     if update_quarter_amount == True:
                         old_balance = last_balance
-                        last_balance = query_balance(symbol)
+                        last_balance = backend.query_balance(symbol)
                         if last_balance == 0:
                             last_balance = old_balance # in case quary failed
                         delta_balance = (last_balance - old_balance) * 100 / old_balance if old_balance != 0 else 0
@@ -959,8 +931,8 @@ def try_to_trade_tit2tat(subpath, guard=False):
                     globals()['signal_open_order_with_%s' % l_dir](l_index, trade_file, close)
                     issue_quarter_order_now(symbol, l_dir, quarter_amount, 'open')
                     
-                    (open_price, no_use) = real_open_price_and_cost(symbol, globals()['contract'], l_dir) if not options.emulate else (close, 0.001)
-                    t_bond = query_bond(symbol, globals()['contract'], l_dir)
+                    (open_price, no_use) = backend.real_open_price_and_cost(symbol, globals()['contract'], l_dir) if not options.emulate else (close, 0.001)
+                    t_bond = backend.query_bond(symbol, globals()['contract'], l_dir)
                     if t_bond > 0:
                         last_bond = t_bond
                         t_open_cost = open_price * last_fee / last_bond  # just see cost
@@ -1276,7 +1248,7 @@ def prepare_for_self_trigger(notify, signal, l_dir):
     contract=figure_out_contract_info(notify)
     period=figure_out_period_info(notify)
     try:
-        reply=eval('%s' % (okcoinFuture.future_kline(symbol, period, contract, '1')))[0]
+        reply=eval('%s' % backend.query_kline(symbol, period, contract, '1'))[0]
         price_filename0 = os.path.join(l_dir, '%s' % (reply[0]))
         price_filename = os.path.join(l_dir, '%s.%s' % (reply[0], signal))
         if os.path.isfile(price_filename) and os.path.getsize(price_filename) > 0:
